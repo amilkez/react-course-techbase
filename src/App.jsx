@@ -2,47 +2,57 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 import './App.css';
 
+const defaultFormData = {
+  title: '',
+  body: '',
+  userId: 1,
+};
+
 function App() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [formData, setformData] = useState(defaultFormData);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState(false);
-  useEffect(() => {
-    setLoading(true);
-    const fetchPosts = async () => {
-      try {
-        const response = await axios.get(
-          'https://jsonplaceholder.typicode.com/poasdsts',
-        );
 
-        setData(response.data);
-        setLoading(false);
-        setError(false);
-      } catch (error) {
-        setError(true);
-      }
-    };
+  const { title, body } = formData;
 
-    fetchPosts();
-  }, []);
+  const onChange = (e) => {
+    setformData((prevState) => ({
+      ...prevState,
+      [e.target.id]: e.target.value,
+    }));
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      await axios.post('https://jsonplaceholder.typicode.com/posts', formData);
+
+      setSuccess(true);
+      setError(false);
+    } catch (error) {
+      setError(true);
+    }
+
+    setformData(defaultFormData);
+  };
 
   return (
     <>
-      {loading && 'Loading...'}
+      <h1>form</h1>
+      <p>create a post</p>
+      <form onSubmit={onSubmit}>
+        <label htmlFor="title">title</label>
+        <input type="text" id="title" value={title} onChange={onChange} />
+        <br />
+        <label htmlFor="body">body</label>
+        <input type="text" id="body" value={body} onChange={onChange} />
+        <br />
+        <button type="submit">upload post</button>
+      </form>
 
-      {error && 'Oops, could not fetch posts, please try again'}
-
-      {data &&
-        data.map((post) => {
-          const { id, title, body } = post;
-
-          return (
-            <article key={id}>
-              <h2>{title}</h2>
-              <p>{id}</p>
-              <p>{body}</p>
-            </article>
-          );
-        })}
+      {error && <p>Oops, could not upload post</p>}
+      {success && <p>Post upload has succeeded</p>}
     </>
   );
 }
